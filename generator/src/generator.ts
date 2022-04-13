@@ -6,14 +6,12 @@ import { logger } from "./utils/logger"; // Logging
 import { getAddress, parseUnits, solidityKeccak256 } from "ethers/lib/utils"; // Ethers utils
 
 // Output file path
-const outputPath: string = path.join(__dirname, "../merkle.json");
+const outputPath: string = path.join(__dirname, "../merkleNFT.json");
 
 // Airdrop recipient addresses and scaled token values
 type AirdropRecipient = {
   // Recipient address
   address: string;
-  // Scaled-to-decimals token value
-  value: string;
 };
 
 export default class Generator {
@@ -22,18 +20,15 @@ export default class Generator {
 
   /**
    * Setup generator
-   * @param {number} decimals of token
-   * @param {Record<string, number>} airdrop address to token claim mapping
+   * @param string[] airdrop address to token claim mapping
    */
-  constructor(decimals: number, airdrop: Record<string, number>) {
+  constructor(airdrop: string[]) {
     // For each airdrop entry
-    for (const [address, tokens] of Object.entries(airdrop)) {
+    for (const address of airdrop) {
       // Push:
       this.recipients.push({
         // Checksum address
-        address: getAddress(address),
-        // Scaled number of tokens claimable by recipient
-        value: parseUnits(tokens.toString(), decimals).toString()
+        address: getAddress(address)
       });
     }
   }
@@ -41,13 +36,12 @@ export default class Generator {
   /**
    * Generate Merkle Tree leaf from address and value
    * @param {string} address of airdrop claimee
-   * @param {string} value of airdrop tokens to claimee
    * @returns {Buffer} Merkle Tree node
    */
-  generateLeaf(address: string, value: string): Buffer {
+  generateLeaf(address: string): Buffer {
     return Buffer.from(
       // Hash in appropriate Merkle format
-      solidityKeccak256(["address", "uint256"], [address, value]).slice(2),
+      solidityKeccak256(["address"], [address]).slice(2),
       "hex"
     );
   }
@@ -58,9 +52,7 @@ export default class Generator {
     // Generate merkle tree
     const merkleTree = new MerkleTree(
       // Generate leafs
-      this.recipients.map(({ address, value }) =>
-        this.generateLeaf(address, value)
-      ),
+      this.recipients.map(({ address }) => this.generateLeaf(address)),
       // Hashing function
       keccak256,
       { sortPairs: true }

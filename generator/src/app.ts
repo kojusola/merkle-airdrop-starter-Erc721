@@ -3,8 +3,11 @@ import path from "path"; // Path routing
 import Generator from "./generator"; // Generator
 import { logger } from "./utils/logger"; // Logging
 
-// Config file path
-const configPath: string = path.join(__dirname, "../config.json");
+// Config file path for erc20 token
+// const configPath: string = path.join(__dirname, "../config.json");
+
+// Config file path for erc721 token
+const configPath: string = path.join(__dirname, "../configNft.json");
 
 /**
  * Throws error and exists process
@@ -31,10 +34,11 @@ function throwErrorAndExit(error: string): void {
   }
 
   // Collect config
-  const decimals: number = configData.decimals ?? 18;
-  const airdrop: Record<string, number> = configData.airdrop;
+  // const decimals: number = configData.decimals ?? 18;
+  console.log(configData.airdrop);
+  const airdrop: string[] = configData.airdrop;
 
   // Initialize and call generator
-  const generator = new Generator(decimals, airdrop);
+  const generator = new Generator(airdrop);
   await generator.process();
 })();
